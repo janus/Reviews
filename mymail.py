@@ -47,21 +47,5 @@ def send_mail(name, email, activation_code =None):
 		s.sendmail(me, email, msg.as_string())
 		s.quit()
 
-print helper.activation_hash()
-print urllib.urlencode({'coot' : helper.activation_hash()})
-#print send_mail("EMEKA", "emekamicro@gmail.com", 88999)
-# Attach part message container.
-# According to RFC 2046, the last part of a multipart message, in this case
-# the HTML message, is best and preferred.
-#msg.attach(part1)
-
-# Send the message via local SMTP server.
-#s = smtplib.SMTP('smtp.gmail.com:587')
-#s.starttls()
-#s.login(username, password)
 
 
-# sendmail function takes 3 arguments: sender's address, recipient's address
-# and message to send - here it is sent as one string.
-#s.sendmail(me, you, msg.as_string())
-#s.quit()
