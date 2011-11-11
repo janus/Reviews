@@ -9,11 +9,11 @@ from email.mime.text import MIMEText
 
 # me == my email address
 # you == recipient's email address
-me = "emekamicro@gmail.com"
-#you = "emeka_micro@yahoo.com"
+me = "ffffff@gmail.com"  #config
+#you = "bbbbb@yahoo.com"
 
-username = "emekamicro"
-password = "mayboy"
+username = "newcity" #config
+password = "7777"  #config
 
 # Create message container - the correct MIME type is multipart/alternative.
 msg = MIMEMultipart('alternative')
