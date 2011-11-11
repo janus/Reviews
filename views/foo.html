@@ -1,0 +1,345 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SimpleTemplate Engine &mdash; Bottle v0.8.5 documentation</title>
+    <link rel="stylesheet" href="_static/bottle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.8.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="Bottle v0.8.5 documentation" href="index.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+
+    <link rel="shortcut icon" type="image/x-icon" href="_static/favicon.ico" />
+ 
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="faq.html" title="Frequently Asked Questions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+
+        <li><a href="index.html">Bottle v0.8.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="simpletemplate-engine">
+<h1>SimpleTemplate Engine<a class="headerlink" href="#simpletemplate-engine" title="Permalink to this headline">�</a></h1>
+
+<p>Bottle comes with a fast, powerful and easy to learn built-in template engine called <em>SimpleTemplate</em> or <em>stpl</em> for short. It is the default engine used by the <a class="reference internal" href="api.html#bottle.view" title="bottle.view"><tt class="xref py py-func docutils literal"><span class="pre">view()</span></tt></a> and <a class="reference internal" href="api.html#bottle.template" title="bottle.template"><tt class="xref py py-func docutils literal"><span class="pre">template()</span></tt></a> helpers but can be used as a stand-alone general purpose template engine too. This document explains the template syntax and shows examples for common use cases.</p>
+<p class="rubric">Basic API Usage:</p>
+<p><a class="reference internal" href="#bottle.SimpleTemplate" title="bottle.SimpleTemplate"><tt class="xref py py-class docutils literal"><span class="pre">SimpleTemplate</span></tt></a> implements the <a class="reference internal" href="api.html#bottle.BaseTemplate" title="bottle.BaseTemplate"><tt class="xref py py-class docutils literal"><span class="pre">BaseTemplate</span></tt></a> API:</p>
+
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bottle</span> <span class="kn">import</span> <span class="n">SimpleTemplate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tpl</span> <span class="o">=</span> <span class="n">SimpleTemplate</span><span class="p">(</span><span class="s">&#39;Hello {{name}}!&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;World&#39;</span><span class="p">)</span>
+<span class="go">u&#39;Hello World!&#39;</span>
+</pre></div>
+</div>
+<p>In this document we use the <a class="reference internal" href="api.html#bottle.template" title="bottle.template"><tt class="xref py py-func docutils literal"><span class="pre">template()</span></tt></a> helper in examples for the sake of simplicity:</p>
+
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bottle</span> <span class="kn">import</span> <span class="n">template</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">template</span><span class="p">(</span><span class="s">&#39;Hello {{name}}!&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;World&#39;</span><span class="p">)</span>
+
+<span class="go">u&#39;Hello World!&#39;</span>
+</pre></div>
+</div>
+<p>Just keep in mind that compiling and rendering templates are two different actions, even if the <a class="reference internal" href="api.html#bottle.template" title="bottle.template"><tt class="xref py py-func docutils literal"><span class="pre">template()</span></tt></a> helper hides this fact. Templates are usually compiled only once and cached internally, but rendered many times with different keyword arguments.</p>
+<div class="section" id="simpletemplate-syntax">
+<h2><a class="reference internal" href="#bottle.SimpleTemplate" title="bottle.SimpleTemplate"><tt class="xref py py-class docutils literal"><span class="pre">SimpleTemplate</span></tt></a> Syntax<a class="headerlink" href="#simpletemplate-syntax" title="Permalink to this headline">�</a></h2>
+<p>Python is a very powerful language but its whitespace-aware syntax makes it difficult to use as a template language. SimpleTemplate removes some of these restrictions and allows you to write clean, readable and maintainable templates while preserving full access to the features, libraries and speed of the Python language.</p>
+
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The <a class="reference internal" href="#bottle.SimpleTemplate" title="bottle.SimpleTemplate"><tt class="xref py py-class docutils literal"><span class="pre">SimpleTemplate</span></tt></a> syntax compiles directly to python bytecode and is executed on each <a class="reference internal" href="#bottle.SimpleTemplate.render" title="bottle.SimpleTemplate.render"><tt class="xref py py-meth docutils literal"><span class="pre">SimpleTemplate.render()</span></tt></a> call. Do not render untrusted templates! They may contain and execute harmful python code.</p>
+</div>
+<p class="rubric">Inline Statements</p>
+<p>You already learned the use of the <tt class="docutils literal"><span class="pre">{{...}}</span></tt> statement from the &#8220;Hello World!&#8221; example above, but there is more: any python statement is allowed within the curly brackets as long as it returns a string or something that has a string representation:</p>
+
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">template</span><span class="p">(</span><span class="s">&#39;Hello {{name}}!&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;World&#39;</span><span class="p">)</span>
+<span class="go">u&#39;Hello World!&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">template</span><span class="p">(</span><span class="s">&#39;Hello {{name.title() if name else &quot;stranger&quot;}}!&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+
+<span class="go">u&#39;Hello stranger!&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">template</span><span class="p">(</span><span class="s">&#39;Hello {{name.title() if name else &quot;stranger&quot;}}!&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;mArC&#39;</span><span class="p">)</span>
+<span class="go">u&#39;Hello Marc!&#39;</span>
+
+</pre></div>
+</div>
+<p>The contained python statement is executed at render-time and has access to all keyword arguments passed to the <a class="reference internal" href="#bottle.SimpleTemplate.render" title="bottle.SimpleTemplate.render"><tt class="xref py py-meth docutils literal"><span class="pre">SimpleTemplate.render()</span></tt></a> method. HTML special characters are escaped automatically to prevent <a class="reference external" href="http://en.wikipedia.org/wiki/Cross-Site_Scripting">XSS</a> attacks. You can start the statement with an exclamation mark to disable escaping for that statement:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">template</span><span class="p">(</span><span class="s">&#39;Hello {{name}}!&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;&lt;b&gt;World&lt;/b&gt;&#39;</span><span class="p">)</span>
+
+<span class="go">u&#39;Hello &amp;lt;b&amp;gt;World&amp;lt;/b&amp;gt;!&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">template</span><span class="p">(</span><span class="s">&#39;Hello {{!name}}!&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;&lt;b&gt;World&lt;/b&gt;&#39;</span><span class="p">)</span>
+
+<span class="go">u&#39;Hello &lt;b&gt;World&lt;/b&gt;!&#39;</span>
+</pre></div>
+</div>
+<p class="rubric">Embedded python code</p>
+<p>The <tt class="docutils literal"><span class="pre">%</span></tt> character marks a line of python code. The only difference between this and real python code is that you have to explicitly close blocks with an <tt class="docutils literal"><span class="pre">%end</span></tt> statement. In return you can align the code with the surrounding template and don&#8217;t have to worry about correct indentation of blocks. The <em>SimpleTemplate</em> parser handles that for you. Lines <em>not</em> starting with a <tt class="docutils literal"><span class="pre">%</span></tt> are rendered as text as usual:</p>
+
+<div class="highlight-html+django"><div class="highlight"><pre>%if name:
+  Hi <span class="nt">&lt;b&gt;</span><span class="cp">{{</span><span class="nv">name</span><span class="cp">}}</span><span class="nt">&lt;/b&gt;</span>
+%else:
+  <span class="nt">&lt;i&gt;</span>Hello stranger<span class="nt">&lt;/i&gt;</span>
+%end
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">%</span></tt> character is only recognised if it is the first non-whitespace character in a line. To escape a leading <tt class="docutils literal"><span class="pre">%</span></tt> you can add a second one. <tt class="docutils literal"><span class="pre">%%</span></tt> is replaced by a single <tt class="docutils literal"><span class="pre">%</span></tt> in the resulting template:</p>
+
+<div class="highlight-html+django"><div class="highlight"><pre>This line contains a % but no python code.
+%% This text-line starts with &#39;%&#39;
+%%% This text-line starts with &#39;%%&#39;
+</pre></div>
+</div>
+<p class="rubric">Suppressing line breaks</p>
+<p>You can suppress the line break in front of a code-line by adding a double backslash at the end of the line:</p>
+<div class="highlight-html+django"><div class="highlight"><pre><span class="nt">&lt;span&gt;</span>\\
+%if True:
+nobreak\\
+%end
+<span class="nt">&lt;/span&gt;</span>
+</pre></div>
+
+</div>
+<p>This template produces the following output:</p>
+<div class="highlight-html+django"><div class="highlight"><pre><span class="nt">&lt;span&gt;</span>nobreak<span class="nt">&lt;/span&gt;</span>
+</pre></div>
+</div>
+<p class="rubric">The <tt class="docutils literal"><span class="pre">%include</span></tt> Statement</p>
+<p>You can include other templates using the <tt class="docutils literal"><span class="pre">%include</span> <span class="pre">sub_template</span> <span class="pre">[kwargs]</span></tt> statement. The <tt class="docutils literal"><span class="pre">sub_template</span></tt> parameter specifies the name or path of the template to be included. The rest of the line is interpreted as a comma-separated list of <tt class="docutils literal"><span class="pre">key=statement</span></tt> pairs similar to keyword arguments in function calls. They are passed to the sub-template analogous to a <a class="reference internal" href="#bottle.SimpleTemplate.render" title="bottle.SimpleTemplate.render"><tt class="xref py py-meth docutils literal"><span class="pre">SimpleTemplate.render()</span></tt></a> call. The <tt class="docutils literal"><span class="pre">**kwargs</span></tt> syntax for passing a dict is allowed too:</p>
+
+<div class="highlight-html+django"><div class="highlight"><pre>%include header_template title=&#39;Hello World&#39;
+<span class="nt">&lt;p&gt;</span>Hello World<span class="nt">&lt;/p&gt;</span>
+%include foother_template
+</pre></div>
+</div>
+<p class="rubric">The <tt class="docutils literal"><span class="pre">%rebase</span></tt> Statement</p>
+<p>The <tt class="docutils literal"><span class="pre">%rebase</span> <span class="pre">base_template</span> <span class="pre">[kwargs]</span></tt> statement causes <tt class="docutils literal"><span class="pre">base_template</span></tt> to be rendered instead of the original template. The base-template then includes the original template using an empty <tt class="docutils literal"><span class="pre">%include</span></tt> statement and has access to all variables specified by <tt class="docutils literal"><span class="pre">kwargs</span></tt>. This way it is possible to wrap a template with another template or to simulate the inheritance feature found in some other template engines.</p>
+
+<p>Let&#8217;s say you have a content template and want to wrap it with a common HTML layout frame. Instead of including several header and footer templates, you can use a single base-template to render the layout frame.</p>
+<p>Base-template named <tt class="docutils literal"><span class="pre">layout.tpl</span></tt>:</p>
+<div class="highlight-html+django"><div class="highlight"><pre><span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;title&gt;</span><span class="cp">{{</span><span class="nv">title</span> <span class="k">or</span> <span class="s1">&#39;No title&#39;</span><span class="cp">}}</span><span class="nt">&lt;/title&gt;</span>
+
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+  %include
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</pre></div>
+</div>
+<p>Main-template named <tt class="docutils literal"><span class="pre">content.tpl</span></tt>:</p>
+<div class="highlight-html+django"><div class="highlight"><pre>This is the page content: <span class="cp">{{</span><span class="nv">content</span><span class="cp">}}</span>
+
+%rebase layout title=&#39;Content Title&#39;
+</pre></div>
+</div>
+<p>Now you can render <tt class="docutils literal"><span class="pre">content.tpl</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">template</span><span class="p">(</span><span class="s">&#39;content&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="s">&#39;Hello World!&#39;</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<div class="highlight-html"><div class="highlight"><pre><span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;title&gt;</span>Content Title<span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+  This is the page content: Hello World!
+
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</pre></div>
+</div>
+<p>A more complex scenario involves chained rebases and multiple content blocks. The <tt class="docutils literal"><span class="pre">block_content.tpl</span></tt> template defines two functions and passes them to a <tt class="docutils literal"><span class="pre">columns.tpl</span></tt> base template:</p>
+<div class="highlight-html+django"><div class="highlight"><pre>%def leftblock():
+  Left block content.
+%end
+%def rightblock():
+  Right block content.
+%end
+%rebase columns left=leftblock, right=rightblock, title=title
+</pre></div>
+</div>
+
+<p>The <tt class="docutils literal"><span class="pre">columns.tpl</span></tt> base-template uses the two callables to render the content of the left and right column. It then wraps itself with the <tt class="docutils literal"><span class="pre">layout.tpl</span></tt> template defined earlier:</p>
+<div class="highlight-html+django"><div class="highlight"><pre>%rebase layout title=title
+<span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">&quot;width: 50%; float:left&quot;</span><span class="nt">&gt;</span>
+  %leftblock()
+<span class="nt">&lt;/div&gt;</span>
+
+<span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">&quot;width: 50%; float:right&quot;</span><span class="nt">&gt;</span>
+  %rightblock()
+<span class="nt">&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p>Lets see how <tt class="docutils literal"><span class="pre">block_content.tpl</span></tt> renders:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">template</span><span class="p">(</span><span class="s">&#39;block_content&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Hello World!&#39;</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<div class="highlight-html"><div class="highlight"><pre><span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;title&gt;</span>Hello World<span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">&quot;width: 50%; float:left&quot;</span><span class="nt">&gt;</span>
+
+  Left block content.
+<span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">&quot;width: 50%; float:right&quot;</span><span class="nt">&gt;</span>
+  Right block content.
+<span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+
+</pre></div>
+</div>
+</div>
+<div class="section" id="simpletemplate-api">
+<h2><a class="reference internal" href="#bottle.SimpleTemplate" title="bottle.SimpleTemplate"><tt class="xref py py-class docutils literal"><span class="pre">SimpleTemplate</span></tt></a> API<a class="headerlink" href="#simpletemplate-api" title="Permalink to this headline">�</a></h2>
+<dl class="class">
+<dt id="bottle.SimpleTemplate">
+<em class="property">class </em><tt class="descname">SimpleTemplate</tt><big>(</big><em>source=None</em>, <em>name=None</em>, <em>lookup=</em><span class="optional">[</span><span class="optional">]</span>, <em>encoding='utf8'</em>, <em>**settings</em><big>)</big><a class="headerlink" href="#bottle.SimpleTemplate" title="Permalink to this definition">�</a></dt>
+
+<dd><dl class="method">
+<dt id="bottle.SimpleTemplate.render">
+<tt class="descname">render</tt><big>(</big><em>**args</em><big>)</big><a class="headerlink" href="#bottle.SimpleTemplate.render" title="Permalink to this definition">�</a></dt>
+<dd><p>Render the template using keyword arguments as local variables.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="known-bugs">
+<h2>Known bugs<a class="headerlink" href="#known-bugs" title="Permalink to this headline">�</a></h2>
+
+<p>Some syntax constructions allowed in python are problematic within a template. The following syntaxes won&#8217;t work with SimpleTemplate:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Multi-line statements must end with a backslash (<tt class="docutils literal"><span class="pre">\</span></tt>) and a comment, if present, must not contain any additional <tt class="docutils literal"><span class="pre">#</span></tt> characters.</li>
+<li>Multi-line strings are not supported yet.</li>
+</ul>
+</div></blockquote>
+</div>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo_nav.png" alt="Logo"/>
+
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SimpleTemplate Engine</a><ul>
+<li><a class="reference internal" href="#simpletemplate-syntax"><tt class="docutils literal"><span class="pre">SimpleTemplate</span></tt> Syntax</a></li>
+<li><a class="reference internal" href="#simpletemplate-api"><tt class="docutils literal"><span class="pre">SimpleTemplate</span></tt> API</a></li>
+
+<li><a class="reference internal" href="#known-bugs">Known bugs</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Tutorial</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="faq.html"
+                        title="next chapter">Frequently Asked Questions</a></p>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/stpl.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="faq.html" title="Frequently Asked Questions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >previous</a> |</li>
+
+        <li><a href="index.html">Bottle v0.8.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+    &copy; <a href="index.htmllicence">Copyright</a> 2009-2011, Marcel Hellkamp - <a href="contact.html">Contact</a><br />
+    Last updated on Apr 29, 2011. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.<br />
+
+    Powered by Bottle 0.8
+    </div>
+
+  </body>
+</html>
