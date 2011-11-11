@@ -8,7 +8,7 @@ import helper
 
 
 try:
-                   conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "janus05", db = "myseun",cursorclass=MySQLdb.cursors.DictCursor)
+                   conn = MySQLdb.connect (host = "nairaland", user = "root", passwd = "naija", db = "myseun",cursorclass=MySQLdb.cursors.DictCursor)
 except MySQLdb.OperationalError, e:
 		raise
 
