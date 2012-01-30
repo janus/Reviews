@@ -3,8 +3,7 @@
 <ul>
     <li><a class="foot-link" href="/contact">Contact</a></li>
     <li><a class="foot-link" href="/blog">Official Blog</a></li>
-
-   <li><a class="foot-link" href="/partner">Partner</a></li>
+   <li><a class="foot-link" href="http://www.satajanus.com.ng">Partner</a></li>
    </ul>
 </div>
 <div id="foot-copyright">
@@ -16,12 +15,14 @@
   </div>
   <div id = "foot-popular">
   <ul>
-    <li><a class="foot-link" href="/nairaland">Nairaland</a></li>
-    <li><a class="foot-link" href="/guardiannewsngr">Guardiannews</a></li>
-   <li><a class="foot-link" href="/others">Others</a></li>
+    <li><a class="foot-link" href="http://www.nairaland.com">Nairaland</a></li>
+    <li><a class="foot-link" href="http://www.guardiannewsngr.com">Guardiannews</a></li>
    </ul>
 
    </div>
 <div id = "blog">
 </div>
 </div>
+</div>
+</body>
+</html>

@@ -1,22 +1,28 @@
-<html>
-<head>
-<title>{{title or 'No title'}}</title>
-<link rel="stylesheet" type="text/css" href="views/style.css">
-</head>
-<body>
-<div id="pagewrap">
+%import sys
+% dir = "/home/rmicro/myPython/Reviews/mydatamodel/config/"
+% sys.path.append(dir)
+%import dconfig
+%include header.tpl my_top=1
 
-%include header.tpl my_test=my_test
-<div  id="center" >
-<p>Your login failed,please again!</p>
+<h2>Login here!</h2>
+%if cond:
+<div id="error"> <p>{{error_message}}</p></div>
+%end
 <form method="POST" action = "/login">
-Email:<input name="name" type="text" /><br />
-Password:<input name="password" type="password" /><br />
-<input type = "submit" name="submit" value="login!"/> 
+<fieldset>
+<p>
+<label for="review_email">Email</label>
+<input type="text" id="review_email" name="email" value="" maxlength="{{dconfig.email_maxlength}}" />
+</p>
+<p>
+<label for="review_password">Password</label>
+<input type="password" id="review_password" name="password" value="" maxlength="{{dconfig.password_maxlength}}" />
+</p>
+<p>
+<input type="hidden" name="form_token" value="{{token}}" />
+<input type="submit" value="&rarr;  Login " />
+</p>
+</fieldset>
 </form>
-</div>
 
 %include footer.tpl
-</div>
-</body>
-</html>
