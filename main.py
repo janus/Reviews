@@ -20,13 +20,11 @@ def  index():
     try:
 
 	token = add_token(helper.token)
-	print token
 	reviews =  Reviews.list_all_reviews()   
         return template("layout",  my_top=0, reviews = reviews, token = token )
     except MySQLdb.OperationalError ,e:
 	redirect("/index")
     
-
 
 @app_others.route('/json:json#[1-9]+#')
 def show_json(json):
@@ -52,8 +50,6 @@ def login_submit():
     password = request.forms.get('password').strip()
     obj_session = request.environ.get('beaker.session')
     token =  request.forms.get('form_token').strip()
-    print "EMEKA"
-    print token
     if token == obj_session["token"]:
 	del obj_session["token"]
         try:
@@ -68,13 +64,11 @@ def login_submit():
 		reviews =  Reviews.list_all_reviews()		    
 	        return template("layout",my_top=user["username"], token=0, reviews=reviews)
 	    else:
-		print "OFFOR"
 		return template("alogin", my_top=1, cond=1,token=token, error_message=error_message)  # template("failedlogin")
         except MySQLdb.OperationalError ,e:
 	     return template("alogin", my_top=1, cond=1, token=token,error_message=error_message) # template("failedlogin")
     else:
 	 return template("alogin", my_top=1, cond=1, token=token, error_message=error_message) 
-
 
 @app_others.get('/logout')
 def log_out():
