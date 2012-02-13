@@ -2,16 +2,18 @@ from bottle import  request, template, redirect,debug,validate, run
 from model import helper
 import mail
 import MySQLdb
-from model.model import  Reviews, Comments
+from model.model import  Reviews, Comments, Votes
 from session import app_others, logged_in_user, add_url, new_app
 
 
+def return_reviews():
+    return Reviews.list_all_reviews()[::-1][:6]
 
 @app_others.get('/review/:a/:b/:c/:name')
 @validate(a=int, b=int, c=int)
 #get out validated
 def get_review(a, b , c, name):
-    created_time =  "{}-{}-{}".format(a ,b , c)
+    created_time =  "{a}-{b}-{c}".format(a ,b , c)
     try:
         review, comments = Reviews.get_by_url(created_time, name.strip())
 	if review:
@@ -21,13 +23,45 @@ def get_review(a, b , c, name):
     except MySQLdb.OperationalError, e:
 	redirect('/index')
 
+@app_others.get('/reviews/sector')
+def get_sector_review():
+    try:
+	    
+        sector_id =  request.GET.get("sector_id")
+        start_point = int(request.GET.get("start"))
+	print sector_id, start_point
+	sector_reviews = Reviews.get_sector_by_id(int(sector_id))[::-1][start_point:6+start_point]
+	print sector_reviews
+        user_details = logged_in_user()
+        my_top = user_details ["username"] if user_details  else 0	
+        reviews = return_reviews()
+        return  template("sector_activity", sector_reviews=sector_reviews, reviews=reviews, my_top = my_top, start_point = start_point )		
+    except (MySQLdb.OperationalError, ValueError):
+	redirect('/index')
+
+@app_others.get('/sector/:id')
+def get_sector(id):
+    sector_reviews = Reviews.get_sector_by_id(int(id))[::-1][:6]
+    try:
+	start_point = 1
+	user_details = logged_in_user()
+	my_top = user_details ["username"] if user_details  else 0	
+	reviews = return_reviews()
+	return  template("sector_activity", sector_reviews=sector_reviews, reviews=reviews, my_top = my_top, start_point = start_point)		
+    except MySQLdb.OperationalError, e:
+	redirect('/index')
+	
+	
 @app_others.get('/reviews/:id')
 def get_review_id(id):
     id = int(id)
     try:
 	review, comments = Reviews.get_by_id( id)
 	if review:
-	    return template("review",  review = review, comments=comments)
+	    user = logged_in_user()
+	    my_top = user["username"] if user is not None else 0
+	    reviews =  Reviews.list_all_reviews()
+	    return template("review",  review = review, comments=comments, reviews= reviews, my_top=my_top)
 	else:
 	    redirect('/index')
     except MySQLdb.OperationalError, e:
@@ -37,12 +71,11 @@ def get_review_id(id):
 def get_all_Reviews():
     try:
         start_point = 1
-	reviews =  Reviews.list_all_reviews()
-	reviews = reviews[::-1]
-	reviews = reviews[:6]
+	reviews =  return_reviews()
 	if reviews :
-	    #start_point = str(start_point)
-	    return template("list_reviews", reviews = reviews , start_point=start_point) #I need to add pagination somewhere, and 
+	    user = logged_in_user()
+	    my_top = user["username"] if user is not None else 0
+	    return template("list_reviews", reviews = reviews , start_point=start_point, my_top=my_top) #I need to add pagination somewhere, and 
 	else:
 	    return template("list_reviews", reviews=reviews, start_point=start_point)
     except MySQLdb.OperationalError, e:
@@ -56,24 +89,27 @@ def get_page():
     except ValueError, e:
 	redirect("/index")
     try:
-        reviews = Reviews.list_all_reviews()
-	reviews = reviews[::-1]
-	reviews = reviews[start_point:6+start_point]
-	return template("list_reviews" , reviews = reviews, start_point=start_point)
+        reviews = Reviews.list_all_reviews()[::-1][start_point:6+start_point]
+	user = logged_in_user()
+	my_top = user["username"] if user is not None else 0
+	return template("list_reviews" , reviews = reviews, start_point=start_point,my_top=my_top)
     except MySQLdb.OperationalError, e:
 	redirect('/index')
     
 @app_others.get('/review/edit/:id')
 def review_edit_page(id):
-    user = logged_in_user()
-    if not user:
-	add_url( "/reviews/edit/{}".format(id))
-	redirect("/login")
-    else:
-	review = Reviews.get_by_id(id)
-        return template("review", review = review)
-
-#Work from here down ... a lot needs to be changed
+    id = int(id)
+    try:
+        user = logged_in_user()
+        if not user:
+	    add_url( "/review/edit/{}".format(id))
+	    redirect("/login")
+        else:
+	    reviews =  return_reviews()
+	    (review, _) = Reviews.get_by_id( id)
+            return template("review_edit", review = review, reviews=reviews, my_top = user["username"])
+    except MySQLdb.OperationalError, e:
+	redirect("/index")
 
 @app_others.get('/reviews/user')
 def reviews_user():
@@ -108,17 +144,20 @@ def reviews_users():
 def edit_review():
     title =  request.forms.get('title').strip()
     entry =  request.forms.get('entry').strip()
-    review_id =  request.forms.get('review_id').strip()
+    review_id =  int(request.forms.get('review_id').strip())
+    branch_id =  int(request.forms.get('option-value'))
+    #id =  request.forms.get('id')
     try:
-	logged_id = logged_in_user()["id"]
-    except KeyError, e:
+	user_details  = logged_in_user()
+	id = user_details["id"]
+	url = helper.generate_url(user_details["username"], title)
+    except TypeError, e:
 	redirect("/index")
     try:
-	if logged_id:
-	    status = Reviews.update(logged_id,  review_id, entry, title)
+	if id:
+	    status = Reviews.update(id,  review_id, entry, title, url,  branch_id) 
 	    if status:
-		link = "/review/%d/%s" %(review_id, "You just updated your review") # This is wrong ...
-		redirect(link)
+		redirect('/reviews/{}'.format(review_id))
 	    else:
 		redirect('/index')
 	else:
@@ -127,7 +166,7 @@ def edit_review():
 	redirect('/index')
 	
 @app_others.get('/review/create')
-def create_review():
+def create_review_get():
     try:
         user = logged_in_user()
         if not user:
@@ -139,67 +178,86 @@ def create_review():
     except MySQLdb.OperationalError , e:
 	redirect('/index')
 
-#Todo be filtered morrow
 @app_others.post('/review/create')
-def create_review():
+def create_review_post():
     title =  request.forms.get('title').strip()
-    branch_id =  request.forms.get('sector_id').strip()
-    id =  request.forms.get('id').strip()
-    message =  request.forms.get('message').strip()
-    user_details  = logged_in_user()
-    url = generate_url(user_details["surname"], title)
+    branch_id =  request.forms.get('option-value')
+    message =  request.forms.get('entry').strip()
+    branch_id = branch_id
     try:
-	review =  Reviews.create(id, branch_id, title, message,  url).save()
-	if review:
-	    return  template("review",  review = review)
+	user_details  = logged_in_user()
+	id = user_details["id"]
+	url = helper.generate_url(user_details["username"], title)
+	review_id =  Reviews(id, branch_id, title, message,  url).save()
+	reviews = return_reviews()
+	if review_id:
+	    review, comments = Reviews.get_by_id(int(review_id))
+	    return  template("review",  review = review, reviews =reviews, comments = comments, my_top = user_details["username"])
 	else:
 	    redirect('/index')
     except MySQLdb.OperationalError , e:
 	redirect('/index')
 
-#Todo be filtered morrow
 @app_others.post('/comment/create')
 def create_comment():
-    message =  request.forms.get('message').strip()
+    message = request.forms.get('articleComment').strip()
     review_id =  request.forms.get('review_id')
     s = request.environ.get('beaker.session')
-    user_id = logged_in_user()['id']
-    try:
-	status =  Comments.create(user_id, review_id, message)
-	review, comments = Reviews.get_by_id( review_id)
-	if status:
-	    return template("review" , review = review, comments= comments)
-	else:
-	    return template("review_error", message = "Failed to create your model.Comments", review = review, comments=comments)
-    except MySQLdb.OperationalError , e:
-	return template("review_error", message = "Failed to create your model.Comments", review = review, comments=comments)
-
-@app_others.get('/review/edit/:id')
-def edit_comment_page(id):
-    if not  logged_in_user():
-	url = "review/edit/%s" % id
-	add_url(url)
-	redirect('/alogin')
-	
-@app_others.post('/review/edit')
-def edit_comment():
-    message =  request.forms.get('message').strip()
-    comment_id =  request.forms.get('comment_id').strip()
-    s = request.environ.get('beaker.session')
-    logged_id = logged_in_user()['id']
-    if user_id == logged_id:
+    if logged_in_user() is None:
+	redirect('/login')
+    else:
 	try:
-	    status = Comments.update(logged_id,  comment_id, message)
-	    if status:
-		link = "/review/%d/%s" %(review_id, "You just updated your comment") 
-		redirect(link)
+	    user_details = logged_in_user()
+	    user_id = user_details['id']
+	    reviews =  return_reviews()
+	    (review, comments) =  Comments.create(user_id, review_id, message).save()
+	    #review, comments = Reviews.get_by_id( review_id)
+	    if comments:
+	        return template("review" , review = review, comments= comments, my_top = user_details["username"], reviews = reviews)
 	    else:
-		redirect('/index')
-	except MySQLdb.OperationalError ,e:
-	    redirect('/index')
+	        return template("review_error", message = "Failed to create your model.Comments", review = review, comments=comments)
+        except MySQLdb.OperationalError , e:
+	    return template("review_error", message = "Failed to create your model.Comments", review = review, comments=comments)
+
+@app_others.get('/votes/up/:id')
+def vote_up(id):
+    try:
+	logged_id = logged_in_user()['id']
+    except TypeError, e:
+	redirect('/reviews/{}'.format(id))
+    try:
+	review, comments = Reviews.get_by_id( id)
+	if review['user_id'] == logged_id:
+	    redirect('/reviews/{}'.format(id))
+	elif Votes.get_by_review_id_and_user_id(logged_id, id):
+	    redirect('/reviews/{}'.format(id))
 	else:
-	    redirect('/index')
-			
+	   voted = Votes.insert(review['user_id'], logged_id, id, 5)
+	   redirect('/reviews/{}'.format(id))
+    except MySQLdb.OperationalError , e:
+	redirect('/reviews/{}'.format(id))
+		
+@app_others.get('/votes/down/:id')
+def vote_down(id):
+    try:
+	logged_id = logged_in_user()['id']
+    except TypeError, e:
+	redirect('/reviews/{}'.format(id))
+    try:
+	review, comments = Reviews.get_by_id( id)
+	if review['user_id'] == logged_id:
+	    redirect('/reviews/{}'.format(id))
+	elif Votes.get_by_review_id_and_user_id(logged_id, id):
+	    redirect('/reviews/{}'.format(id))
+	elif review['review_votes'] is None or review['review_votes'] == 1:
+	    redirect('/reviews/{}'.format(id))
+	else:
+	   voted = Votes.insert(review['user_id'], logged_id, id, -2 )
+	   redirect('/reviews/{}'.format(id))
+    except MySQLdb.OperationalError , e:
+	redirect('/reviews/{}'.format(id))
+		
 
 #debug(True)
 #run(app = new_app)
+
